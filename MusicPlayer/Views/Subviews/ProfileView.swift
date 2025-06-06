@@ -12,7 +12,7 @@ struct ProfileView: View {
     @EnvironmentObject var authController: AuthController
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            BackgroundView()
             VStack(spacing: 24) {
                 Image(systemName: "person.crop.circle.fill")
                     .resizable()

@@ -44,7 +44,17 @@ class ViewModel: NSObject, ObservableObject, AVAudioPlayerDelegate {
     // MARK: ~ Methods
     override init() {
         super.init()
+        setupAudioSession()
         loadSongsFromResources()
+    }
+    
+    private func setupAudioSession() {
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            print("Failed to set up audio session: \(error)")
+        }
     }
     
     private func loadSongsFromResources() {
@@ -79,20 +89,37 @@ class ViewModel: NSObject, ObservableObject, AVAudioPlayerDelegate {
         }
     }
     
-    func playAudio(song: SongModel){
+    func playAudio(song: SongModel) {
         do {
+            // Останавливаем текущее воспроизведение
+            stopAudio()
+            
+            // Создаем новый плеер
             self.audioPlayer = try AVAudioPlayer(data: song.data)
             self.audioPlayer?.delegate = self
-            self.audioPlayer?.play()
-            isPlaying = true
-            totalTime = audioPlayer?.duration ?? 0.0
-            if let index = songs.firstIndex(where: { $0.id == song.id} ) {
-                currentIndex = index
+            self.audioPlayer?.prepareToPlay()
+            
+            // Проверяем, что аудио-сессия активна
+            if !AVAudioSession.sharedInstance().isOtherAudioPlaying {
+                try AVAudioSession.sharedInstance().setActive(true)
             }
-            // Добавляем в историю
-            HistoryManager.shared.addToHistory(song)
+            
+            // Начинаем воспроизведение
+            if self.audioPlayer?.play() == true {
+                isPlaying = true
+                totalTime = audioPlayer?.duration ?? 0.0
+                if let index = songs.firstIndex(where: { $0.id == song.id }) {
+                    currentIndex = index
+                }
+                // Добавляем в историю
+                HistoryManager.shared.addToHistory(song)
+            } else {
+                print("Failed to play audio")
+                isPlaying = false
+            }
         } catch {
             print("Error playing audio: \(error.localizedDescription)")
+            isPlaying = false
         }
     }
     
@@ -117,10 +144,12 @@ class ViewModel: NSObject, ObservableObject, AVAudioPlayerDelegate {
     func playPause() {
         if isPlaying {
             audioPlayer?.pause()
+            isPlaying = false
         } else {
-            audioPlayer?.play()
+            if audioPlayer?.play() == true {
+                isPlaying = true
+            }
         }
-        isPlaying.toggle()
     }
     
     func seekAudio(time: TimeInterval) {
@@ -129,8 +158,10 @@ class ViewModel: NSObject, ObservableObject, AVAudioPlayerDelegate {
     
     func stopAudio() {
         audioPlayer?.stop()
-        audioPlayer = nil 
+        audioPlayer = nil
         isPlaying = false
+        currentTime = 0.0
+        totalTime = 0.0
     }
     
     func updateProgress() {
@@ -149,5 +180,10 @@ class ViewModel: NSObject, ObservableObject, AVAudioPlayerDelegate {
             stopAudio()
             songs.remove(at: first)
         }
+    }
+    
+    deinit {
+        stopAudio()
+        try? AVAudioSession.sharedInstance().setActive(false)
     }
 }
