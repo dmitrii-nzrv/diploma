@@ -12,7 +12,7 @@ import SwiftUI
 
 @main
 struct MusicPlayerApp: App {
-    @StateObject var authController = AuthController()
+    @StateObject private var authController = AuthController()
     
     init() {
         FirebaseApp.configure()
@@ -25,3 +25,4 @@ struct MusicPlayerApp: App {
         }
     }
 }
+

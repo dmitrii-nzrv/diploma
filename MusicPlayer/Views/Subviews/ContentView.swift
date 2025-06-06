@@ -36,6 +36,11 @@ struct ContentView: View {
                         Image(systemName: "clock.fill")
                         Text("History")
                     }
+                ProfileView()
+                    .tabItem {
+                        Image(systemName: "clock.fill")
+                        Text("Profile")
+                    }
             }
         } else {
             content
@@ -44,10 +49,11 @@ struct ContentView: View {
     
     var content: some View {
         ZStack{
-            Color.black
+            //Color.black
+            Color.topBG
             
             RoundedRectangle(cornerRadius: 30, style: .continuous)
-                .foregroundStyle(.linearGradient(colors: [.pink, .red], startPoint: .topLeading, endPoint: .bottomTrailing))
+                .foregroundStyle(.linearGradient(colors: [.bottomBG, .purple], startPoint: .topLeading, endPoint: .bottomTrailing))
                 .frame(width: 1000, height: 400)
                 .rotationEffect(.degrees(135))
                 .offset(y: -350)
